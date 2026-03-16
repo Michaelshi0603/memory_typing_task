@@ -17,19 +17,28 @@
     .btn:disabled{opacity:.6;cursor:not-allowed;}
     .muted{color:#555;font-size:14px;}
     .footer{margin-top:18px;color:#666;font-size:14px;text-align:center;}
+
     #stage{min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;
       padding:16px;border-radius:12px;border:1px solid #ddd;background:#fff;}
-    #stage.black{background:#000;color:#fff;border-color:#000;}
     #passage{font-size:20px;line-height:1.35;max-width:900px;white-space:pre-wrap;}
+
     .progressWrap{margin-top:12px;}
     .progressBar{width:100%;height:16px;border:1px solid #333;border-radius:999px;overflow:hidden;background:#eee;}
     .progressFill{height:100%;width:0%;background:#2b6fff;}
+
     textarea{width:100%;height:140px;font-family:"Times New Roman",Times,serif;font-size:16px;padding:10px;box-sizing:border-box;resize:vertical;}
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border:1px solid #ccc;padding:8px;text-align:center;}
     th{background:#f2f2f2;}
-    .ok{color:#0a7a28;}
-    .bad{color:#b00020;}
+
+    /* Fullscreen black overlay */
+    #blackOverlay{
+      position:fixed; inset:0; background:#000; color:#fff;
+      display:none; z-index:9999; align-items:center; justify-content:center; flex-direction:column;
+      padding:20px;
+    }
+    #blackOverlay .big{font-size:26px;font-weight:bold;}
+    #blackOverlay .small{margin-top:10px;font-size:16px;color:#ddd;}
   </style>
 </head>
 
@@ -86,6 +95,7 @@
     <div id="typingArea" style="display:none;margin-top:14px;">
       <label><b>Type the passage you just saw</b></label>
       <div class="muted">Copy / paste is blocked in this box.</div>
+      <div class="muted" id="typingTimer" style="margin-top:6px;">Typing time elapsed: 0.00s</div>
       <textarea id="typed"></textarea>
       <div style="margin-top:10px;">
         <button class="btn" id="submitBtn">Submit trial</button>
@@ -98,7 +108,6 @@
   <div id="summary" class="card" style="display:none;">
     <h2 style="margin-top:0;">Finished ✅</h2>
     <div id="summaryTop" class="muted"></div>
-    <div id="uploadStatus" class="muted" style="margin-top:8px;"></div>
 
     <table>
       <thead>
@@ -118,18 +127,22 @@
   </div>
 </div>
 
+<!-- FULL BLACK SCREEN -->
+<div id="blackOverlay">
+  <div class="big">Black screen (wait)</div>
+  <div class="small" id="blackTime">Time remaining: 20s</div>
+  <div class="progressWrap" style="width:min(900px, 92vw); margin-top:14px;">
+    <div class="progressBar" style="border-color:#fff;background:#222;">
+      <div class="progressFill" id="blackFill" style="background:#2b6fff;"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // =========================
-  // Config
-  // =========================
   const SHOW_SECONDS = 20;
   const BLACK_SECONDS = 20;
   const PASSWORD = "123";
 
-  // Cloudflare Worker endpoint (must be the worker you deployed)
-  const UPLOAD_ENDPOINT = "https://memorytypingtask.fangyu-shi.workers.dev";
-
-  // Must exist next to index.html on GitHub Pages (case-sensitive)
   const AUDIO_FILES = {
     lyrics: "with-lyrics.mp3",
     nolyrics: "no-lyrics.mp3"
@@ -148,7 +161,6 @@
   const expEl = document.getElementById("exp");
   const summaryEl = document.getElementById("summary");
 
-  const stageEl = document.getElementById("stage");
   const passageEl = document.getElementById("passage");
   const fillEl = document.getElementById("fill");
   const timeLabelEl = document.getElementById("timeLabel");
@@ -158,6 +170,7 @@
   const typedEl = document.getElementById("typed");
   const submitBtn = document.getElementById("submitBtn");
   const showOriginalBtn = document.getElementById("showOriginalBtn");
+  const typingTimerEl = document.getElementById("typingTimer");
 
   const startBtn = document.getElementById("startBtn");
   const downloadBtn = document.getElementById("downloadBtn");
@@ -165,18 +178,18 @@
 
   const sumRowsEl = document.getElementById("sumRows");
   const summaryTopEl = document.getElementById("summaryTop");
-  const uploadStatusEl = document.getElementById("uploadStatus");
   const audioStatusEl = document.getElementById("audioStatus");
 
-  function setUploadStatus(html){ uploadStatusEl.innerHTML = html || ""; }
-  function setAudioStatus(text){ audioStatusEl.textContent = text || ""; }
+  const blackOverlay = document.getElementById("blackOverlay");
+  const blackTimeEl = document.getElementById("blackTime");
+  const blackFillEl = document.getElementById("blackFill");
 
-  // =========================
-  // WebAudio MP3 loop
-  // =========================
+  // -------- WebAudio loop (MP3) ----------
   let audioCtx=null, gainNode=null, sourceNode=null;
 
-  async function ensureAudioContext(){
+  function setAudioStatus(t){ audioStatusEl.textContent = t || ""; }
+
+  async function ensureAudio(){
     if(!audioCtx){
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AC();
@@ -184,9 +197,7 @@
       gainNode.gain.value = 1.0;
       gainNode.connect(audioCtx.destination);
     }
-    if(audioCtx.state !== "running"){
-      await audioCtx.resume();
-    }
+    if(audioCtx.state !== "running") await audioCtx.resume();
   }
 
   function stopAudio(){
@@ -203,32 +214,26 @@
   async function startAudio(choice){
     stopAudio();
     if(choice === "none") return;
-
-    await ensureAudioContext();
-
+    await ensureAudio();
     const url = AUDIO_FILES[choice];
     try{
       const res = await fetch(url + "?v=" + Date.now());
       if(!res.ok) throw new Error(`Audio fetch failed (${res.status}) for ${url}`);
       const arr = await res.arrayBuffer();
       const buf = await audioCtx.decodeAudioData(arr);
-
       sourceNode = audioCtx.createBufferSource();
       sourceNode.buffer = buf;
       sourceNode.loop = true;
       sourceNode.connect(gainNode);
       sourceNode.start(0);
-
       setAudioStatus(`Audio playing: ${url}`);
     }catch(e){
       setAudioStatus(`Audio error: ${e.message}`);
-      alert("Audio could not start. Make sure with-lyrics.mp3 and no-lyrics.mp3 exist next to index.html (case-sensitive).");
+      alert("Audio could not start. Ensure with-lyrics.mp3 and no-lyrics.mp3 exist next to index.html (case-sensitive).");
     }
   }
 
-  // =========================
-  // Scoring + CSV
-  // =========================
+  // -------- Accuracy ----------
   function similarityPercent(a,b){
     a=a.trim(); b=b.trim();
     if(!a && !b) return 100;
@@ -247,57 +252,95 @@
     return (1 - dist/maxLen)*100;
   }
 
+  // -------- CSV (ALWAYS build fresh when downloading) ----------
   function csvEscape(cell){
     const s = String(cell ?? "");
     if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
     return s;
   }
 
-  function buildCsv(meta, results){
-    const {name, student, music, totalTime, meanAcc} = meta;
+  function getMetaForCsv(){
+    const name = document.getElementById("name").value.trim();
+    const student = document.getElementById("student").value.trim();
+    const music = document.querySelector('input[name="music"]:checked')?.value || "none";
+    // Use the frozen totalTimeSec if finished; otherwise compute so it never blanks
+    const totalTimeSec = finishedSummary ? finishedSummary.totalTimeSec : (performance.now()-totalStart)/1000;
+    const meanAccuracy = results.length ? (results.reduce((s,r)=>s+r.accuracy,0)/results.length) : 0;
+    return {name, student, music, totalTimeSec, meanAccuracy};
+  }
+
+  function buildCsv(){
+    // If not finished, still allow CSV if results exists, but you can require 5 trials if you want:
+    if(results.length === 0){
+      return null;
+    }
+    const meta = getMetaForCsv();
     const rows=[];
-    rows.push(["Name", name]);
-    rows.push(["Student Number", student]);
-    rows.push(["Music", music]);
-    rows.push(["Total Time (s)", totalTime.toFixed(4)]);
-    rows.push(["Mean Accuracy (%)", meanAcc.toFixed(4)]);
+    rows.push(["Name", meta.name]);
+    rows.push(["Student Number", meta.student]);
+    rows.push(["Music", meta.music]);
+    rows.push(["Total Time (s)", meta.totalTimeSec.toFixed(4)]);
+    rows.push(["Mean Accuracy (%)", meta.meanAccuracy.toFixed(4)]);
     rows.push(["Source Note", "The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."]);
     rows.push([]);
     rows.push(["Trial","Original Text","Typed Text","Accuracy (%)","Typing Time (s)"]);
     results.forEach(r=> rows.push([r.trial, r.original, r.typed, r.accuracy.toFixed(4), r.typingTime.toFixed(4)]));
     rows.push([]);
-    rows.push(["", "", "Mean Accuracy (%)", meanAcc.toFixed(4), ""]);
+    rows.push(["", "", "Mean Accuracy (%)", meta.meanAccuracy.toFixed(4), ""]);
     return rows.map(r => r.map(csvEscape).join(",")).join("\n");
   }
 
-  // =========================
-  // Upload (non-blocking)
-  // =========================
-  function makeSafe(s){ return String(s||"").replace(/[^a-zA-Z0-9_-]/g,""); }
-
-  async function uploadCsvToGitHub(csvText, studentNumber){
-    const ts = new Date().toISOString().replace(/[:.]/g,"-");
-    const filename = `${ts}_${makeSafe(studentNumber)}.csv`;
-
-    const res = await fetch(UPLOAD_ENDPOINT, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ filename, content: csvText })
-    });
-
-    if(!res.ok){
-      const t = await res.text();
-      return {ok:false, err:t};
+  function downloadCsv(){
+    const csv = buildCsv();
+    if(!csv){
+      alert("No CSV available yet. Finish the experiment first.");
+      return;
     }
-    const j = await res.json().catch(()=>({}));
-    return {ok:true, path: j.path || ("submissions/" + filename)};
+    const student = document.getElementById("student").value.trim() || "unknown";
+    const blob=new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`memory_typing_summary_${student}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
-  // =========================
-  // State / Flow
-  // =========================
-  let trialIndex=0, phase="setup", phaseStart=0, totalStart=0, currentText="";
+  // -------- Flow state ----------
+  let trialIndex=0;
+  let phase="setup"; // show | black | type | summary
+  let phaseStart=0;
+  let totalStart=0;
+  let currentText="";
   let results=[];
+  let typingRAF=null;
+
+  // Freeze summary at finish (used for UI total time)
+  let finishedSummary=null;
+
+  function showSetup(){
+    stopAudio();
+    setupEl.style.display="";
+    expEl.style.display="none";
+    summaryEl.style.display="none";
+    blackOverlay.style.display="none";
+    results=[];
+    trialIndex=0;
+    phase="setup";
+    finishedSummary=null;
+  }
+  function showExperiment(){
+    setupEl.style.display="none";
+    expEl.style.display="";
+    summaryEl.style.display="none";
+  }
+  function showSummary(){
+    setupEl.style.display="none";
+    expEl.style.display="none";
+    summaryEl.style.display="";
+  }
 
   function setProgress(elapsed,total){
     const pct = Math.max(0, Math.min(1, elapsed/total))*100;
@@ -305,24 +348,11 @@
     const remaining = Math.max(0, Math.ceil(total - elapsed));
     timeLabelEl.textContent = `Time remaining: ${remaining}s`;
   }
-
-  function showSetup(){
-    stopAudio();
-    setupEl.style.display="";
-    expEl.style.display="none";
-    summaryEl.style.display="none";
-    setUploadStatus("");
-  }
-  function showExperiment(){
-    setupEl.style.display="none";
-    expEl.style.display="";
-    summaryEl.style.display="none";
-    setUploadStatus("");
-  }
-  function showSummary(){
-    setupEl.style.display="none";
-    expEl.style.display="none";
-    summaryEl.style.display="";
+  function setBlackProgress(elapsed,total){
+    const pct = Math.max(0, Math.min(1, elapsed/total))*100;
+    blackFillEl.style.width = pct + "%";
+    const remaining = Math.max(0, Math.ceil(total - elapsed));
+    blackTimeEl.textContent = `Time remaining: ${remaining}s`;
   }
 
   function startShow(){
@@ -331,7 +361,8 @@
     currentText = TRIALS[trialIndex];
 
     trialLabelEl.textContent = `Trial ${trialIndex+1} / ${TRIALS.length}`;
-    stageEl.classList.remove("black");
+    blackOverlay.style.display="none";
+
     passageEl.textContent = currentText;
     typingAreaEl.style.display="none";
     typedEl.value="";
@@ -341,7 +372,7 @@
   function startBlack(){
     phase="black";
     phaseStart = performance.now();
-    stageEl.classList.add("black");
+    blackOverlay.style.display="flex";
     passageEl.textContent="";
     typingAreaEl.style.display="none";
     requestAnimationFrame(tick);
@@ -350,12 +381,21 @@
   function startType(){
     phase="type";
     phaseStart = performance.now();
-    stageEl.classList.remove("black");
+    blackOverlay.style.display="none";
     passageEl.textContent="";
     typingAreaEl.style.display="";
     fillEl.style.width="0%";
-    timeLabelEl.textContent="Type now (no timer)";
+    timeLabelEl.textContent="Typing…";
     typedEl.focus();
+
+    if(typingRAF) cancelAnimationFrame(typingRAF);
+    const loop=()=>{
+      if(phase!=="type") return;
+      const e=(performance.now()-phaseStart)/1000;
+      typingTimerEl.textContent = `Typing time elapsed: ${e.toFixed(2)}s`;
+      typingRAF = requestAnimationFrame(loop);
+    };
+    loop();
   }
 
   function tick(now){
@@ -366,26 +406,29 @@
       else requestAnimationFrame(tick);
     }else if(phase==="black"){
       const e=(now-phaseStart)/1000;
-      setProgress(e, BLACK_SECONDS);
+      setBlackProgress(e, BLACK_SECONDS);
       if(e>=BLACK_SECONDS) startType();
       else requestAnimationFrame(tick);
     }
   }
 
-  // IMPORTANT: finish is now synchronous (always sets CSV immediately)
   function finishNow(){
     phase="summary";
     stopAudio();
+    blackOverlay.style.display="none";
+    if(typingRAF) cancelAnimationFrame(typingRAF);
 
-    const totalTime = (performance.now() - totalStart) / 1000;
-    const meanAcc = results.reduce((s,r)=>s+r.accuracy,0) / results.length;
-
-    const name = document.getElementById("name").value.trim();
-    const student = document.getElementById("student").value.trim();
-    const music = document.querySelector('input[name="music"]:checked').value;
+    const meta = getMetaForCsv();
+    finishedSummary = {
+      name: meta.name,
+      student: meta.student,
+      music: meta.music,
+      totalTimeSec: (performance.now()-totalStart)/1000,
+      meanAccuracy: meta.meanAccuracy
+    };
 
     summaryTopEl.textContent =
-      `Name: ${name} | Student Number: ${student} | Music: ${music} | Total time: ${totalTime.toFixed(2)}s | Mean accuracy: ${meanAcc.toFixed(1)}%`;
+      `Name: ${finishedSummary.name} | Student Number: ${finishedSummary.student} | Music: ${finishedSummary.music} | Total time: ${finishedSummary.totalTimeSec.toFixed(2)}s | Mean accuracy: ${finishedSummary.meanAccuracy.toFixed(1)}%`;
 
     sumRowsEl.innerHTML="";
     results.forEach(r=>{
@@ -394,32 +437,11 @@
       sumRowsEl.appendChild(tr);
     });
 
-    // Generate CSV immediately and store it
-    const meta = {name, student, music, totalTime, meanAcc};
-    const csv = buildCsv(meta, results);
-    window.__LAST_CSV__ = csv;
-    window.__LAST_STUDENT__ = student;
-
     showSummary();
-
-    // Upload in background (doesn't block download)
-    setUploadStatus("Uploading to GitHub…");
-    uploadCsvToGitHub(csv, student).then(up=>{
-      if(up.ok){
-        setUploadStatus(`<span class="ok">Uploaded ✅</span> &nbsp; saved to <b>${up.path}</b>`);
-      }else{
-        console.warn("Upload failed:", up.err);
-        setUploadStatus(`<span class="bad">Upload failed ❌</span> <span class="muted">(You can still download CSV)</span>`);
-      }
-    }).catch(err=>{
-      console.warn("Upload error:", err);
-      setUploadStatus(`<span class="bad">Upload error ❌</span> <span class="muted">(You can still download CSV)</span>`);
-    });
+    // auto-generate is implicit since download builds fresh; no popups needed
   }
 
-  // =========================
-  // Block clipboard
-  // =========================
+  // -------- Clipboard blocking ----------
   function blockClipboard(e){
     const key=(e.key||"").toLowerCase();
     if(e.ctrlKey && ["c","v","x","a"].includes(key)) e.preventDefault();
@@ -431,9 +453,7 @@
   typedEl.addEventListener("cut", e=>e.preventDefault());
   typedEl.addEventListener("contextmenu", e=>e.preventDefault());
 
-  // =========================
-  // Handlers
-  // =========================
+  // -------- Handlers ----------
   startBtn.addEventListener("click", async ()=>{
     const name=document.getElementById("name").value.trim();
     const student=document.getElementById("student").value.trim();
@@ -444,8 +464,9 @@
     trialIndex=0;
     results=[];
     totalStart=performance.now();
+    finishedSummary=null;
 
-    const music=document.querySelector('input[name="music"]:checked').value;
+    const music=document.querySelector('input[name="music"]:checked')?.value || "none";
     await startAudio(music);
 
     showExperiment();
@@ -453,6 +474,8 @@
   });
 
   submitBtn.addEventListener("click", ()=>{
+    if(phase!=="type") return;
+
     const typed=typedEl.value.trim();
     const typingTime=(performance.now()-phaseStart)/1000;
     const accuracy=similarityPercent(currentText, typed);
@@ -460,11 +483,8 @@
     results.push({trial: trialIndex+1, original: currentText, typed, accuracy, typingTime});
 
     trialIndex++;
-    if(trialIndex >= TRIALS.length){
-      finishNow(); // <-- fixed
-    }else{
-      startShow();
-    }
+    if(trialIndex >= TRIALS.length) finishNow();
+    else startShow();
   });
 
   showOriginalBtn.addEventListener("click", ()=>{
@@ -474,29 +494,8 @@
     else alert("Incorrect password.");
   });
 
-  downloadBtn.addEventListener("click", ()=>{
-    const csv = window.__LAST_CSV__;
-    const student = window.__LAST_STUDENT__ || "unknown";
-    if(!csv){
-      alert("No CSV available yet. Finish the experiment first.");
-      return;
-    }
-    const blob=new Blob([csv], {type:"text/csv;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a");
-    a.href=url;
-    a.download=`memory_typing_summary_${student}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  });
-
-  restartBtn.addEventListener("click", ()=>{
-    results=[];
-    trialIndex=0;
-    showSetup();
-  });
+  downloadBtn.addEventListener("click", downloadCsv);
+  restartBtn.addEventListener("click", showSetup);
 
   showSetup();
 </script>
