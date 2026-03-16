@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Memory Typing Experiment</title>
+  <style>
+    body{font-family:"Times New Roman",Times,serif;margin:0;background:#fff;color:#000;}
+    .wrap{max-width:980px;margin:0 auto;padding:24px 18px;}
+    h1{font-size:28px;margin:0 0 10px;}
+    .card{border:1px solid #ccc;border-radius:10px;padding:16px;margin:14px 0;background:#fff;}
+    label{display:block;margin:8px 0 4px;}
+    input[type="text"]{width:100%;padding:10px;font-family:"Times New Roman",Times,serif;font-size:16px;box-sizing:border-box;}
+    .row{display:flex;gap:12px;flex-wrap:wrap;}
+    .row>div{flex:1;min-width:260px;}
+    .btn{font-family:"Times New Roman",Times,serif;font-size:16px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#f6f6f6;cursor:pointer;}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+    .muted{color:#555;font-size:14px;}
+    .footer{margin-top:18px;color:#666;font-size:14px;text-align:center;}
+
+    #stage{min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;
+      padding:16px;border-radius:12px;border:1px solid #ddd;background:#fff;}
+    #stage.black{background:#000;color:#fff;border-color:#000;}
+    #passage{font-size:20px;line-height:1.35;max-width:900px;white-space:pre-wrap;}
+    .progressWrap{margin-top:12px;}
+    .progressBar{width:100%;height:16px;border:1px solid #333;border-radius:999px;overflow:hidden;background:#eee;}
+    .progressFill{height:100%;width:0%;background:#2b6fff;}
+    textarea{width:100%;height:140px;font-family:"Times New Roman",Times,serif;font-size:16px;padding:10px;box-sizing:border-box;resize:vertical;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{border:1px solid #ccc;padding:8px;text-align:center;}
+    th{background:#f2f2f2;}
+    .ok{color:#0a7a28;}
+    .bad{color:#b00020;}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <h1>Memory Typing Experiment (5 Trials)</h1>
+
+  <!-- SETUP -->
+  <div id="setup" class="card">
+    <div class="row">
+      <div>
+        <label>Name</label>
+        <input id="name" type="text" placeholder="Enter your name" />
+      </div>
+      <div>
+        <label>Student Number</label>
+        <input id="student" type="text" placeholder="Enter your student number" />
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <label>Background Music</label>
+      <div>
+        <label><input type="radio" name="music" value="lyrics" /> With lyrics</label>
+        <label><input type="radio" name="music" value="nolyrics" /> Without lyrics</label>
+        <label><input type="radio" name="music" value="none" checked /> No music</label>
+      </div>
+      <div class="muted">Music loops during the whole experiment (if enabled).</div>
+      <div class="muted" id="audioStatus" style="margin-top:6px;"></div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <button class="btn" id="startBtn">Start Experiment</button>
+    </div>
+
+    <div class="footer">
+      The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852.
+    </div>
+  </div>
+
+  <!-- EXPERIMENT -->
+  <div id="exp" class="card" style="display:none;">
+    <div class="muted" id="trialLabel">Trial 1 / 5</div>
+
+    <div id="stage">
+      <div id="passage"></div>
+    </div>
+
+    <div class="progressWrap">
+      <div class="muted" id="timeLabel">Time remaining: 20s</div>
+      <div class="progressBar"><div class="progressFill" id="fill"></div></div>
+    </div>
+
+    <div id="typingArea" style="display:none;margin-top:14px;">
+      <label><b>Type the passage you just saw</b></label>
+      <div class="muted">Copy / paste is blocked in this box.</div>
+      <textarea id="typed"></textarea>
+      <div style="margin-top:10px;">
+        <button class="btn" id="submitBtn">Submit trial</button>
+        <button class="btn" id="showOriginalBtn" style="margin-left:8px;">Show original (password)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summary" class="card" style="display:none;">
+    <h2 style="margin-top:0;">Finished ✅</h2>
+    <div id="summaryTop" class="muted"></div>
+    <div id="uploadStatus" class="muted" style="margin-top:8px;"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Trial</th>
+          <th>Accuracy (%)</th>
+          <th>Typing time (s)</th>
+        </tr>
+      </thead>
+      <tbody id="sumRows"></tbody>
+    </table>
+
+    <div style="margin-top:12px;">
+      <button class="btn" id="downloadBtn">Download summary (CSV)</button>
+      <button class="btn" id="restartBtn" style="margin-left:8px;">Restart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =========================
+  // Config
+  // =========================
+  const SHOW_SECONDS = 20;
+  const BLACK_SECONDS = 20;
+  const PASSWORD = "123";
+
+  // Your Cloudflare Worker endpoint (POSTs commit to GitHub)
+  const UPLOAD_ENDPOINT = "https://memorytypingtask.fangyu-shi.workers.dev";
+
+  // Audio file names (must exist next to index.html on GitHub Pages)
+  const AUDIO_FILES = {
+    lyrics: "with-lyrics.mp3",
+    nolyrics: "no-lyrics.mp3"
+  };
+
+  const TRIALS = [
+    "Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.",
+    "A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.",
+    "His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",
+    "He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",
+    "Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned."
+  ];
+
+  // Elements
+  const setupEl = document.getElementById("setup");
+  const expEl = document.getElementById("exp");
+  const summaryEl = document.getElementById("summary");
+
+  const stageEl = document.getElementById("stage");
+  const passageEl = document.getElementById("passage");
+  const fillEl = document.getElementById("fill");
+  const timeLabelEl = document.getElementById("timeLabel");
+  const trialLabelEl = document.getElementById("trialLabel");
+
+  const typingAreaEl = document.getElementById("typingArea");
+  const typedEl = document.getElementById("typed");
+  const submitBtn = document.getElementById("submitBtn");
+  const showOriginalBtn = document.getElementById("showOriginalBtn");
+
+  const startBtn = document.getElementById("startBtn");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const restartBtn = document.getElementById("restartBtn");
+
+  const sumRowsEl = document.getElementById("sumRows");
+  const summaryTopEl = document.getElementById("summaryTop");
+  const uploadStatusEl = document.getElementById("uploadStatus");
+  const audioStatusEl = document.getElementById("audioStatus");
+
+  function setUploadStatus(html) { uploadStatusEl.innerHTML = html || ""; }
+  function setAudioStatus(text) { audioStatusEl.textContent = text || ""; }
+
+  // =========================
+  // WebAudio (MP3 loop)
+  // =========================
+  let audioCtx = null;
+  let gainNode = null;
+  let sourceNode = null;
+
+  async function ensureAudioContext(){
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = 1.0;
+      gainNode.connect(audioCtx.destination);
+    }
+    if (audioCtx.state !== "running") {
+      await audioCtx.resume(); // must happen in user gesture
+    }
+  }
+
+  function stopAudio(){
+    try{
+      if (sourceNode) {
+        sourceNode.stop(0);
+        sourceNode.disconnect();
+      }
+    }catch{}
+    sourceNode = null;
+    setAudioStatus("");
+  }
+
+  async function startAudio(choice){
+    stopAudio();
+    if (choice === "none") return;
+
+    await ensureAudioContext();
+
+    const url = AUDIO_FILES[choice];
+    try{
+      const res = await fetch(url + "?v=" + Date.now());
+      if(!res.ok) throw new Error(`Audio fetch failed (${res.status}) for ${url}`);
+      const arr = await res.arrayBuffer();
+      const buf = await audioCtx.decodeAudioData(arr);
+
+      sourceNode = audioCtx.createBufferSource();
+      sourceNode.buffer = buf;
+      sourceNode.loop = true;
+      sourceNode.connect(gainNode);
+      sourceNode.start(0);
+
+      setAudioStatus(`Audio playing: ${url}`);
+    }catch(e){
+      setAudioStatus(`Audio error: ${e.message}`);
+      alert("Audio could not start. Make sure with-lyrics.mp3 and no-lyrics.mp3 exist next to index.html (case-sensitive).");
+    }
+  }
+
+  // =========================
+  // Scoring
+  // =========================
+  function similarityPercent(a, b){
+    a = a.trim(); b = b.trim();
+    if(!a && !b) return 100;
+
+    const m = a.length, n = b.length;
+    const dp = Array.from({length:n+1}, () => new Array(m+1).fill(0));
+    for(let i=0;i<=n;i++) dp[i][0]=i;
+    for(let j=0;j<=m;j++) dp[0][j]=j;
+
+    for(let i=1;i<=n;i++){
+      for(let j=1;j<=m;j++){
+        const cost = (b[i-1] === a[j-1]) ? 0 : 1;
+        dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+      }
+    }
+    const dist = dp[n][m];
+    const maxLen = Math.max(m,n) || 1;
+    return (1 - dist/maxLen) * 100;
+  }
+
+  // =========================
+  // Upload (auto commit via Worker)
+  // =========================
+  function makeSafe(s){ return String(s || "").replace(/[^a-zA-Z0-9_-]/g, ""); }
+
+  async function uploadCsvToGitHub(csvText, studentNumber){
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    const filename = `${ts}_${makeSafe(studentNumber)}.csv`;
+
+    const res = await fetch(UPLOAD_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ filename, content: csvText })
+    });
+
+    if(!res.ok){
+      const t = await res.text();
+      return { ok:false, err:t };
+    }
+    const j = await res.json().catch(()=>({}));
+    return { ok:true, path: j.path || ("submissions/" + filename) };
+  }
+
+  // =========================
+  // State
+  // =========================
+  let trialIndex = 0;
+  let phase = "setup";
+  let phaseStart = 0;
+  let totalStart = 0;
+  let currentText = "";
+  let results = [];
+
+  function setProgress(elapsed, total){
+    const pct = Math.max(0, Math.min(1, elapsed / total)) * 100;
+    fillEl.style.width = pct + "%";
+    const remaining = Math.max(0, Math.ceil(total - elapsed));
+    timeLabelEl.textContent = `Time remaining: ${remaining}s`;
+  }
+
+  function showSetup(){
+    stopAudio();
+    setupEl.style.display = "";
+    expEl.style.display = "none";
+    summaryEl.style.display = "none";
+    setUploadStatus("");
+  }
+  function showExperiment(){
+    setupEl.style.display = "none";
+    expEl.style.display = "";
+    summaryEl.style.display = "none";
+    setUploadStatus("");
+  }
+  function showSummary(){
+    setupEl.style.display = "none";
+    expEl.style.display = "none";
+    summaryEl.style.display = "";
+  }
+
+  function startShow(){
+    phase = "show";
+    phaseStart = performance.now();
+    currentText = TRIALS[trialIndex];
+
+    trialLabelEl.textContent = `Trial ${trialIndex+1} / ${TRIALS.length}`;
+    stageEl.classList.remove("black");
+    passageEl.textContent = currentText;
+    typingAreaEl.style.display = "none";
+    typedEl.value = "";
+
+    requestAnimationFrame(tick);
+  }
+
+  function startBlack(){
+    phase = "black";
+    phaseStart = performance.now();
+
+    stageEl.classList.add("black");
+    passageEl.textContent = "";
+    typingAreaEl.style.display = "none";
+
+    requestAnimationFrame(tick);
+  }
+
+  function startType(){
+    phase = "type";
+    phaseStart = performance.now();
+
+    stageEl.classList.remove("black");
+    passageEl.textContent = "";
+    typingAreaEl.style.display = "";
+    fillEl.style.width = "0%";
+    timeLabelEl.textContent = "Type now (no timer)";
+
+    typedEl.focus();
+  }
+
+  function tick(now){
+    if(phase === "show"){
+      const elapsed = (now - phaseStart)/1000;
+      setProgress(elapsed, SHOW_SECONDS);
+      if(elapsed >= SHOW_SECONDS) startBlack();
+      else requestAnimationFrame(tick);
+    }else if(phase === "black"){
+      const elapsed = (now - phaseStart)/1000;
+      setProgress(elapsed, BLACK_SECONDS);
+      if(elapsed >= BLACK_SECONDS) startType();
+      else requestAnimationFrame(tick);
+    }
+  }
+
+  function buildCsv(name, student, music, totalTime, meanAcc){
+    const rows = [];
+    rows.push(["Name", name]);
+    rows.push(["Student Number", student]);
+    rows.push(["Music", music]);
+    rows.push(["Total Time (s)", totalTime.toFixed(4)]);
+    rows.push(["Mean Accuracy (%)", meanAcc.toFixed(4)]);
+    rows.push(["Source Note", "The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."]);
+    rows.push([]);
+    rows.push(["Trial","Original Text","Typed Text","Accuracy (%)","Typing Time (s)"]);
+    results.forEach(r=> rows.push([r.trial, r.original, r.typed, r.accuracy.toFixed(4), r.typingTime.toFixed(4)]));
+    rows.push([]);
+    rows.push(["", "", "Mean Accuracy (%)", meanAcc.toFixed(4), ""]);
+
+    return rows.map(r => r.map(cell => {
+      const s = String(cell ?? "");
+      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    }).join(",")).join("\n");
+  }
+
+  async function finish(){
+    phase = "summary";
+    stopAudio();
+
+    const totalTime = (performance.now() - totalStart) / 1000;
+    const meanAcc = results.reduce((s,r)=>s+r.accuracy,0) / results.length;
+
+    const name = document.getElementById("name").value.trim();
+    const student = document.getElementById("student").value.trim();
+    const music = document.querySelector('input[name="music"]:checked').value;
+
+    summaryTopEl.textContent =
+      `Name: ${name} | Student Number: ${student} | Music: ${music} | Total time: ${totalTime.toFixed(2)}s | Mean accuracy: ${meanAcc.toFixed(1)}%`;
+
+    sumRowsEl.innerHTML = "";
+    results.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.trial}</td><td>${r.accuracy.toFixed(1)}</td><td>${r.typingTime.toFixed(2)}</td>`;
+      sumRowsEl.appendChild(tr);
+    });
+
+    showSummary();
+
+    // Build CSV and auto-upload
+    const csv = buildCsv(name, student, music, totalTime, meanAcc);
+
+    setUploadStatus(`<span>Uploading to GitHub…</span>`);
+    const up = await uploadCsvToGitHub(csv, student);
+
+    if(up.ok){
+      // The folder will appear automatically after first upload
+      setUploadStatus(`<span class="ok">Uploaded ✅</span> &nbsp; (saved to <b>${up.path}</b> in your GitHub repo)`);
+    }else{
+      setUploadStatus(`<span class="bad">Upload failed ❌</span><br><span class="muted">Open DevTools Console for details.</span>`);
+      console.warn("Upload failed:", up.err);
+    }
+
+    // Store CSV for manual download button
+    window.__LAST_CSV__ = csv;
+    window.__LAST_STUDENT__ = student;
+  }
+
+  // =========================
+  // Clipboard blocking
+  // =========================
+  function blockClipboard(e){
+    const key = (e.key || "").toLowerCase();
+    if(e.ctrlKey && ["c","v","x","a"].includes(key)) e.preventDefault();
+    if(e.metaKey && ["c","v","x","a"].includes(key)) e.preventDefault();
+  }
+  typedEl.addEventListener("keydown", blockClipboard);
+  typedEl.addEventListener("paste", e => e.preventDefault());
+  typedEl.addEventListener("copy", e => e.preventDefault());
+  typedEl.addEventListener("cut", e => e.preventDefault());
+  typedEl.addEventListener("contextmenu", e => e.preventDefault());
+
+  // =========================
+  // Handlers
+  // =========================
+  startBtn.addEventListener("click", async ()=>{
+    const name = document.getElementById("name").value.trim();
+    const student = document.getElementById("student").value.trim();
+    if(!name || !student){
+      alert("Please enter Name and Student Number.");
+      return;
+    }
+
+    trialIndex = 0;
+    results = [];
+    totalStart = performance.now();
+
+    const music = document.querySelector('input[name="music"]:checked').value;
+
+    // Start audio inside click gesture
+    await startAudio(music);
+
+    showExperiment();
+    startShow();
+  });
+
+  submitBtn.addEventListener("click", ()=>{
+    const typed = typedEl.value.trim();
+    const typingTime = (performance.now() - phaseStart)/1000;
+    const accuracy = similarityPercent(currentText, typed);
+
+    results.push({ trial: trialIndex+1, original: currentText, typed, accuracy, typingTime });
+
+    trialIndex++;
+    if(trialIndex >= TRIALS.length) finish();
+    else startShow();
+  });
+
+  showOriginalBtn.addEventListener("click", ()=>{
+    const pw = prompt("Enter password to view the original passage:");
+    if(pw === null) return;
+    if(pw === PASSWORD) alert(currentText);
+    else alert("Incorrect password.");
+  });
+
+  downloadBtn.addEventListener("click", ()=>{
+    const csv = window.__LAST_CSV__;
+    const student = window.__LAST_STUDENT__ || "unknown";
+
+    if(!csv){
+      alert("No CSV available yet. Finish the experiment first.");
+      return;
+    }
+
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `memory_typing_summary_${student}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  restartBtn.addEventListener("click", ()=>{
+    results = [];
+    trialIndex = 0;
+    showSetup();
+  });
+
+  showSetup();
+</script>
+</body>
+</html>
