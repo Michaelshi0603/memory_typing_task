@@ -1,22 +1,20 @@
 export default {
   async fetch(request, env) {
-    // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, { headers: cors() });
+      return new Response(null, { status: 204, headers: cors() });
     }
 
-    // Simple health check
     if (request.method === "GET") {
-      return new Response("ok", { headers: cors() });
+      return json({ ok: true, service: "memory-typing-upload-worker" }, 200);
     }
 
     if (request.method !== "POST") {
-      return new Response("Use POST", { status: 405, headers: cors() });
+      return json({ ok: false, error: "Use POST" }, 405);
     }
 
     const payload = await request.json().catch(() => null);
     if (!payload || !payload.filename || !payload.content) {
-      return new Response("Missing filename/content", { status: 400, headers: cors() });
+      return json({ ok: false, error: "Missing filename/content" }, 400);
     }
 
     const owner = env.GITHUB_OWNER;
@@ -25,7 +23,7 @@ export default {
     const token = env.GITHUB_TOKEN;
 
     if (!owner || !repo || !token) {
-      return new Response("Missing server secrets", { status: 500, headers: cors() });
+      return json({ ok: false, error: "Missing server secrets" }, 500);
     }
 
     const safeName = String(payload.filename).replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -34,7 +32,7 @@ export default {
 
     const body = {
       message: `Upload submission ${safeName}`,
-      content: btoa(unescape(encodeURIComponent(payload.content))),
+      content: toBase64Utf8(String(payload.content)),
       branch
     };
 
@@ -49,16 +47,30 @@ export default {
       body: JSON.stringify(body)
     });
 
+    const responseText = await resp.text();
+
     if (!resp.ok) {
-      const t = await resp.text();
-      return new Response(`GitHub upload failed: ${resp.status}\n${t}`, { status: 500, headers: cors() });
+      return json({
+        ok: false,
+        error: `GitHub upload failed (${resp.status})`,
+        details: responseText
+      }, 500);
     }
 
-    return new Response(JSON.stringify({ ok: true, path }), {
-      headers: { ...cors(), "Content-Type": "application/json" }
-    });
+    return json({ ok: true, path }, 200);
   }
 };
+
+function toBase64Utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
 
 function cors() {
   return {
@@ -66,4 +78,14 @@ function cors() {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      ...cors(),
+      "Content-Type": "application/json"
+    }
+  });
 }
