@@ -1,0 +1,4 @@
+name = "memorytypingtask"
+main = "index_worker_final.js"
+compatibility_date = "2026-03-16"
+workers_dev = true
