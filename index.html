@@ -29,6 +29,8 @@
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border:1px solid #ccc;padding:8px;text-align:center;}
     th{background:#f2f2f2;}
+    .ok{color:#0a7a28;}
+    .bad{color:#b00020;}
   </style>
 </head>
 
@@ -97,6 +99,7 @@
   <div id="summary" class="card" style="display:none;">
     <h2 style="margin-top:0;">Finished ✅</h2>
     <div id="summaryTop" class="muted"></div>
+    <div id="uploadStatus" class="muted" style="margin-top:8px;"></div>
 
     <table>
       <thead>
@@ -117,9 +120,21 @@
 </div>
 
 <script>
+  // =========================
+  // Config
+  // =========================
   const SHOW_SECONDS = 20;
   const BLACK_SECONDS = 20;
   const PASSWORD = "123";
+
+  // Your Cloudflare Worker endpoint (POSTs commit to GitHub)
+  const UPLOAD_ENDPOINT = "https://memorytypingtask.fangyu-shi.workers.dev";
+
+  // Audio file names (must exist next to index.html on GitHub Pages)
+  const AUDIO_FILES = {
+    lyrics: "with-lyrics.mp3",
+    nolyrics: "no-lyrics.mp3"
+  };
 
   const TRIALS = [
     "Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.",
@@ -151,24 +166,18 @@
 
   const sumRowsEl = document.getElementById("sumRows");
   const summaryTopEl = document.getElementById("summaryTop");
+  const uploadStatusEl = document.getElementById("uploadStatus");
   const audioStatusEl = document.getElementById("audioStatus");
 
-  // =========================
-  // WebAudio (MP3) — reliable autoplay behavior
-  // =========================
-  // Put these next to index.html (case-sensitive on GitHub Pages):
-  // - with-lyrics.mp3
-  // - no-lyrics.mp3
-  const AUDIO_FILES = {
-    lyrics: "with-lyrics.mp3",
-    nolyrics: "no-lyrics.mp3"
-  };
+  function setUploadStatus(html) { uploadStatusEl.innerHTML = html || ""; }
+  function setAudioStatus(text) { audioStatusEl.textContent = text || ""; }
 
+  // =========================
+  // WebAudio (MP3 loop)
+  // =========================
   let audioCtx = null;
   let gainNode = null;
   let sourceNode = null;
-
-  function audioStatus(msg){ audioStatusEl.textContent = msg || ""; }
 
   async function ensureAudioContext(){
     if (!audioCtx) {
@@ -179,7 +188,7 @@
       gainNode.connect(audioCtx.destination);
     }
     if (audioCtx.state !== "running") {
-      await audioCtx.resume(); // must happen inside Start click
+      await audioCtx.resume(); // must happen in user gesture
     }
   }
 
@@ -191,7 +200,7 @@
       }
     }catch{}
     sourceNode = null;
-    audioStatus("");
+    setAudioStatus("");
   }
 
   async function startAudio(choice){
@@ -202,7 +211,7 @@
 
     const url = AUDIO_FILES[choice];
     try{
-      const res = await fetch(url + "?v=" + Date.now()); // cache-bust during testing
+      const res = await fetch(url + "?v=" + Date.now());
       if(!res.ok) throw new Error(`Audio fetch failed (${res.status}) for ${url}`);
       const arr = await res.arrayBuffer();
       const buf = await audioCtx.decodeAudioData(arr);
@@ -213,15 +222,15 @@
       sourceNode.connect(gainNode);
       sourceNode.start(0);
 
-      audioStatus(`Audio playing: ${url}`);
+      setAudioStatus(`Audio playing: ${url}`);
     }catch(e){
-      audioStatus(`Audio error: ${e.message}`);
+      setAudioStatus(`Audio error: ${e.message}`);
       alert("Audio could not start. Make sure with-lyrics.mp3 and no-lyrics.mp3 exist next to index.html (case-sensitive).");
     }
   }
 
   // =========================
-  // scoring
+  // Scoring
   // =========================
   function similarityPercent(a, b){
     a = a.trim(); b = b.trim();
@@ -244,7 +253,30 @@
   }
 
   // =========================
-  // state
+  // Upload (auto commit via Worker)
+  // =========================
+  function makeSafe(s){ return String(s || "").replace(/[^a-zA-Z0-9_-]/g, ""); }
+
+  async function uploadCsvToGitHub(csvText, studentNumber){
+    const ts = new Date().toISOString().replace(/[:.]/g,"-");
+    const filename = `${ts}_${makeSafe(studentNumber)}.csv`;
+
+    const res = await fetch(UPLOAD_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ filename, content: csvText })
+    });
+
+    if(!res.ok){
+      const t = await res.text();
+      return { ok:false, err:t };
+    }
+    const j = await res.json().catch(()=>({}));
+    return { ok:true, path: j.path || ("submissions/" + filename) };
+  }
+
+  // =========================
+  // State
   // =========================
   let trialIndex = 0;
   let phase = "setup";
@@ -265,11 +297,13 @@
     setupEl.style.display = "";
     expEl.style.display = "none";
     summaryEl.style.display = "none";
+    setUploadStatus("");
   }
   function showExperiment(){
     setupEl.style.display = "none";
     expEl.style.display = "";
     summaryEl.style.display = "none";
+    setUploadStatus("");
   }
   function showSummary(){
     setupEl.style.display = "none";
@@ -315,7 +349,42 @@
     typedEl.focus();
   }
 
-  function finish(){
+  function tick(now){
+    if(phase === "show"){
+      const elapsed = (now - phaseStart)/1000;
+      setProgress(elapsed, SHOW_SECONDS);
+      if(elapsed >= SHOW_SECONDS) startBlack();
+      else requestAnimationFrame(tick);
+    }else if(phase === "black"){
+      const elapsed = (now - phaseStart)/1000;
+      setProgress(elapsed, BLACK_SECONDS);
+      if(elapsed >= BLACK_SECONDS) startType();
+      else requestAnimationFrame(tick);
+    }
+  }
+
+  function buildCsv(name, student, music, totalTime, meanAcc){
+    const rows = [];
+    rows.push(["Name", name]);
+    rows.push(["Student Number", student]);
+    rows.push(["Music", music]);
+    rows.push(["Total Time (s)", totalTime.toFixed(4)]);
+    rows.push(["Mean Accuracy (%)", meanAcc.toFixed(4)]);
+    rows.push(["Source Note", "The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."]);
+    rows.push([]);
+    rows.push(["Trial","Original Text","Typed Text","Accuracy (%)","Typing Time (s)"]);
+    results.forEach(r=> rows.push([r.trial, r.original, r.typed, r.accuracy.toFixed(4), r.typingTime.toFixed(4)]));
+    rows.push([]);
+    rows.push(["", "", "Mean Accuracy (%)", meanAcc.toFixed(4), ""]);
+
+    return rows.map(r => r.map(cell => {
+      const s = String(cell ?? "");
+      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    }).join(",")).join("\n");
+  }
+
+  async function finish(){
     phase = "summary";
     stopAudio();
 
@@ -337,23 +406,29 @@
     });
 
     showSummary();
-  }
 
-  function tick(now){
-    if(phase === "show"){
-      const elapsed = (now - phaseStart)/1000;
-      setProgress(elapsed, SHOW_SECONDS);
-      if(elapsed >= SHOW_SECONDS) startBlack();
-      else requestAnimationFrame(tick);
-    }else if(phase === "black"){
-      const elapsed = (now - phaseStart)/1000;
-      setProgress(elapsed, BLACK_SECONDS);
-      if(elapsed >= BLACK_SECONDS) startType();
-      else requestAnimationFrame(tick);
+    // Build CSV and auto-upload
+    const csv = buildCsv(name, student, music, totalTime, meanAcc);
+
+    setUploadStatus(`<span>Uploading to GitHub…</span>`);
+    const up = await uploadCsvToGitHub(csv, student);
+
+    if(up.ok){
+      // The folder will appear automatically after first upload
+      setUploadStatus(`<span class="ok">Uploaded ✅</span> &nbsp; (saved to <b>${up.path}</b> in your GitHub repo)`);
+    }else{
+      setUploadStatus(`<span class="bad">Upload failed ❌</span><br><span class="muted">Open DevTools Console for details.</span>`);
+      console.warn("Upload failed:", up.err);
     }
+
+    // Store CSV for manual download button
+    window.__LAST_CSV__ = csv;
+    window.__LAST_STUDENT__ = student;
   }
 
-  // Block copy/paste (Win + Mac)
+  // =========================
+  // Clipboard blocking
+  // =========================
   function blockClipboard(e){
     const key = (e.key || "").toLowerCase();
     if(e.ctrlKey && ["c","v","x","a"].includes(key)) e.preventDefault();
@@ -365,7 +440,9 @@
   typedEl.addEventListener("cut", e => e.preventDefault());
   typedEl.addEventListener("contextmenu", e => e.preventDefault());
 
-  // Start
+  // =========================
+  // Handlers
+  // =========================
   startBtn.addEventListener("click", async ()=>{
     const name = document.getElementById("name").value.trim();
     const student = document.getElementById("student").value.trim();
@@ -380,7 +457,7 @@
 
     const music = document.querySelector('input[name="music"]:checked').value;
 
-    // must happen directly on click gesture
+    // Start audio inside click gesture
     await startAudio(music);
 
     showExperiment();
@@ -407,31 +484,13 @@
   });
 
   downloadBtn.addEventListener("click", ()=>{
-    const name = document.getElementById("name").value.trim();
-    const student = document.getElementById("student").value.trim();
-    const music = document.querySelector('input[name="music"]:checked').value;
+    const csv = window.__LAST_CSV__;
+    const student = window.__LAST_STUDENT__ || "unknown";
 
-    const totalTime = (performance.now() - totalStart) / 1000;
-    const meanAcc = results.reduce((s,r)=>s+r.accuracy,0) / results.length;
-
-    const rows = [];
-    rows.push(["Name", name]);
-    rows.push(["Student Number", student]);
-    rows.push(["Music", music]);
-    rows.push(["Total Time (s)", totalTime.toFixed(4)]);
-    rows.push(["Mean Accuracy (%)", meanAcc.toFixed(4)]);
-    rows.push(["Source Note", "The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."]);
-    rows.push([]);
-    rows.push(["Trial","Original Text","Typed Text","Accuracy (%)","Typing Time (s)"]);
-    results.forEach(r=> rows.push([r.trial, r.original, r.typed, r.accuracy.toFixed(4), r.typingTime.toFixed(4)]));
-    rows.push([]);
-    rows.push(["", "", "Mean Accuracy (%)", meanAcc.toFixed(4), ""]);
-
-    const csv = rows.map(r => r.map(cell => {
-      const s = String(cell ?? "");
-      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-      return s;
-    }).join(",")).join("\n");
+    if(!csv){
+      alert("No CSV available yet. Finish the experiment first.");
+      return;
+    }
 
     const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
     const url = URL.createObjectURL(blob);
