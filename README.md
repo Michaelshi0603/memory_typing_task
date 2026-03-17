@@ -22,11 +22,6 @@ Required:
 ---
 
 ## How to run 
-[visit](https://michaelshi0603.github.io/memory_typing_task/)
+[click here to run](https://michaelshi0603.github.io/memory_typing_task/)
 results are automatically uploaded to the submissions folder once task is completed.
 
-In the project folder, run:
-
-**Mac / Linux**
-```bash
-python3 -m http.server 8000
