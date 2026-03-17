@@ -1,0 +1,21 @@
+Name,Zihan Wang
+Student Number,1011358727
+Music,none
+Total Time (s),567.6820
+Mean Accuracy (%),42.4111
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five and twenty years ago, at the start of the story, a man, we shell call",61.5385,69.4520
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A man of wealth and significant taste 
+His home almost styled a palace 
+Habites in",50.0000,99.1500
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.","His whole being seemed to have
+Wherewith he
+Get in the eye of the world",52.3810,56.8920
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","He saw himself in
+Worth to fall back on",16.2996,59.5050
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","His guilt was discovered, he filed, his wife
+His mother’s death, his father’s, his daughter’s",31.8367,75.9340
+
+,,Mean Accuracy (%),42.4111,
