@@ -21,14 +21,9 @@ Required:
 
 ---
 
-## How to run locally
-
-### Option A: Open the file directly
-1. Download the repo as a ZIP, or clone it.
-2. Open `index.html` in your browser.
-
-### Option B (recommended): Run a local server
-Some browsers handle audio more reliably when served over HTTP.
+## How to run 
+[visit](https://michaelshi0603.github.io/memory_typing_task/)
+results are automatically uploaded to the submissions folder once task is completed.
 
 In the project folder, run:
 
