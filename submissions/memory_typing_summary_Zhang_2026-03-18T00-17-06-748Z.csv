@@ -1,0 +1,15 @@
+Name,Yinyin
+Student Number,Zhang
+Music,none
+Total Time (s),314.5532
+Mean Accuracy (%),30.9355
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago, an epoch of the story, a man called",56.7308,19.7046
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","a man of wealth, expenditure, a palace",23.6842,31.0132
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.","his seems being a crystalized itself, a eye of the world",38.8889,24.2832
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","he, consious, of being,",9.2511,16.4662
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",F's guilt was discovered. His wife was perished by her innate nobleness.,26.1224,22.9404
+
+,,Mean Accuracy (%),30.9355,
