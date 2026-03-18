@@ -1,0 +1,15 @@
+Name,JiaHui Zhang
+Student Number,1111111111
+Music,nolyrics
+Total Time (s),430.1131
+Mean Accuracy (%),49.5758
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","at twenty five years ago, at the begining of the epoch, a man whom we call Fuenleory.",52.8846,30.3165
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A man with wealth, a magnificiant taste, his home are almost styled a palace, his habits in ordinary sense",61.1842,75.8683
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.","his whole being seem to be crystallized itself into an external, the eyes of the world",66.6667,33.9147
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","he saw himself in imminent, with the instinct of a soul shrinking from annihilation",36.1233,43.1993
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",fauntleroy's guilt was discovered;he fled; his wife perished by the nessisity of,31.0204,38.7432
+
+,,Mean Accuracy (%),49.5758,
