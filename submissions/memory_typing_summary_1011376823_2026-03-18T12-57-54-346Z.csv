@@ -1,0 +1,15 @@
+Name,Gabriel Faustino
+Student Number,1011376823
+Music,none
+Total Time (s),253.0730
+Mean Accuracy (%),20.7177
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago, there was an epic with a story, with a man we shall call Fauntelroy.",66.3462,27.7080
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.",princely,5.2632,8.6080
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",splendor,6.3492,2.9380
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",heretofore,4.4053,3.5960
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",Fauntleroy's guilt was discovered. He fled; his wife,21.2245,10.0880
+
+,,Mean Accuracy (%),20.7177,
