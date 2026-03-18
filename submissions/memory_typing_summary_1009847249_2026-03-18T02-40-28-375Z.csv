@@ -1,0 +1,15 @@
+Name,Faye
+Student Number,1009847249
+Music,nolyrics
+Total Time (s),340.9430
+Mean Accuracy (%),48.2666
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago, there dwelt a man, named faulterton",50.0000,25.5170
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","a man of wealth, and magmificant taste. His home expenditure styled a palace. habits homely, princely",57.2368,39.6367
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.","his whole being seemd to crystalized into splendor, wehrewith he gliterred into the world",66.6667,26.8785
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","he saw himself in imminent pearl, conscious of no peril",23.3480,18.3964
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","fauntleroy's guilt was discovered. he fled, his wife perished by the necessity. his daughered was left as an orphan",44.0816,30.0273
+
+,,Mean Accuracy (%),48.2666,
