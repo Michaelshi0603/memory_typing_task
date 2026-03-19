@@ -1,0 +1,15 @@
+Name,Pengyang Wu
+Student Number,1011138378
+Music,lyrics
+Total Time (s),484.1700
+Mean Accuracy (%),77.2448
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five and twenty years ago, at the epoch of this story, a man whom we shall call afauntey",79.8077,56.4210
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styles a palace, his habits in the ordinary sense, princely",98.6842,58.7680
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.","His whole being seemed to have crystallized itself into an external splendor, where he glittered in eges of the world",92.0635,50.3500
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","He saw himself in imminent peril of losing all that heretofore distinguished him, and conscious of no innate worth to fall back upon",57.7093,50.3490
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","Fauntleroy’s guilt was discovered. He fled, his wife perished by the necessity of her innate nobleness, I. Its alliance with a being so ignorable. And",57.9592,66.7700
+
+,,Mean Accuracy (%),77.2448,
