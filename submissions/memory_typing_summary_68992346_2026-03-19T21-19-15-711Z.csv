@@ -1,0 +1,15 @@
+Name,Harry Zhang
+Student Number,68992346
+Music,lyrics
+Total Time (s),380.1920
+Mean Accuracy (%),32.2680
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five and twenty years ago, a man called faintyboy",38.4615,24.6570
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A MAN of wealth, and magnificent tastes, and prodigal expenditures. His home is like a palace",55.9211,61.9530
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",His whole seem to being have.crystallized itself into a wedge.,39.6825,37.0600
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",He saw himself imminent,10.1322,9.9570
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",Fauntleroy’s guilt was discovered.  His wife,17.1429,36.3700
+
+,,Mean Accuracy (%),32.2680,
