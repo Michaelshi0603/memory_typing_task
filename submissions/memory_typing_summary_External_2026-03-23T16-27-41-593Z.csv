@@ -1,0 +1,15 @@
+Name,MY Y
+Student Number,External
+Music,nolyrics
+Total Time (s),889.6193
+Mean Accuracy (%),20.1838
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.",Five an twenty yers ago,20.1923,176.6966
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","a man of wealth, his home is almost like a palace",28.2895,110.0274
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",,0.0000,3.2679
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","He recoiled from calamity, with the instinct of a soul shrinking from",30.3965,343.2631
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","fountlary's guilty was discovered, and he fled, his wife perished",22.0408,55.6974
+
+,,Mean Accuracy (%),20.1838,
