@@ -1,0 +1,15 @@
+Name,Mahi Shukla
+Student Number,1011026998
+Music,none
+Total Time (s),400.9208
+Mean Accuracy (%),61.9188
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago, at the epoch of this story, ther",56.7308,37.3905
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace",70.3947,39.6548
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",THis whole being seemed to have crystallized itself into an ext,48.4127,38.6163
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth",52.4229,42.4182
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","TFauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy",81.6327,42.6626
+
+,,Mean Accuracy (%),61.9188,
