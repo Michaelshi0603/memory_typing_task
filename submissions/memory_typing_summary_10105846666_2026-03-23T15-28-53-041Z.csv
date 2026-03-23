@@ -1,0 +1,15 @@
+Name,lan Yi Shang
+Student Number,10105846666
+Music,lyrics
+Total Time (s),431.2942
+Mean Accuracy (%),27.6926
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five and twenty years ago,at the epoch of this story",48.0769,49.7580
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A ma of wealth, and magnificant taste",24.3421,77.9027
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",His whole being seemed to have crystallized into an external,47.6190,77.5737
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",He saw himself in immitment,11.8943,18.6801
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",zxcvbnmasdfghjklqwertyuiop,6.5306,6.1573
+
+,,Mean Accuracy (%),27.6926,
