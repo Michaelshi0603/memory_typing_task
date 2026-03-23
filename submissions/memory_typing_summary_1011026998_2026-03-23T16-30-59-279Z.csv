@@ -1,0 +1,15 @@
+Name,Mahi Shukla
+Student Number,1011026998
+Music,none
+Total Time (s),229.9788
+Mean Accuracy (%),32.8606
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.",years the whom call Fauntleroy.,29.8077,5.2938
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","of prodigal expenditure. home might a in the sense, princely.",40.1316,5.8891
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",to have eyes of the,15.0794,4.3788
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.","himself imminent peril of losing that had and, of innate to back upon, he recoiled this with a shrinking",45.8150,7.4862
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","was discovered. wife by the nobleness, its a being ignoble; and her than orphaned.",33.4694,6.7234
+
+,,Mean Accuracy (%),32.8606,
