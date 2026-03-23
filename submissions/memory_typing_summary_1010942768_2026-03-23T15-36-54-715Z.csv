@@ -1,0 +1,15 @@
+Name,Yufei Qian
+Student Number,1010942768
+Music,lyrics
+Total Time (s),533.2229
+Mean Accuracy (%),22.1201
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago,",25.0000,57.9147
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.",His home might almost be a palace,21.7105,43.3810
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",where with he glittered in the eye of the world,37.3016,41.1800
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",with the instinct of a soul,11.8943,111.1101
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.",his daughter was left worse than an orphan,14.6939,78.3308
+
+,,Mean Accuracy (%),22.1201,
