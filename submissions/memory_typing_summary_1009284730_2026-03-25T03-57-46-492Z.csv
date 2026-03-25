@@ -1,0 +1,15 @@
+Name,anna
+Student Number,1009284730
+Music,lyrics
+Total Time (s),538.6440
+Mean Accuracy (%),48.1515
+Source Note,"The passages are adapted from Nathaniel Hawthorne, The Blithedale Romance. Originally published in 1852."
+
+Trial,Original Text,Typed Text,Accuracy (%),Typing Time (s)
+1,"Five-and-twenty years ago, at the epoch of this story, there dwelt, a man whom we shall call Fauntleroy.","Five-and-twenty years ago, the Enoch of this story, there dwelt, a man whom we called Franhe.",81.7308,65.4490
+2,"A man of wealth, and magnificent tastes, and prodigal expenditure. His home might almost be styled a palace, his habits in the ordinary sense, princely.","A man of wealth, magnificent taste. His home might almost be styled as a palace, his habit in ordinary sense",67.1053,75.3080
+3,"His whole being seemed to have crystallized itself into an external splendor, wherewith he glittered in the eyes of the world.",His whole seemed as crystallized,24.6032,47.5800
+4,"He saw himself in imminent peril of losing all that had heretofore distinguished him; and, conscious of no innate worth to fall back upon, he recoiled from this calamity, with the instinct of a soul shrinking from annihilation.",He saw himself in imminent peril of the heretofore distinguished him. And concise of conscious of the innate,44.0529,72.4220
+5,"Fauntleroy's guilt was discovered. He fled; his wife perished by the necessity of her innate nobleness, in its alliance with a being so ignoble; and betwixt her mother's death and her father's ignominy, his daughter was left worse than orphaned.","Fautleroy’s guilt was discovered, his wife perish nessecily",23.2653,76.5560
+
+,,Mean Accuracy (%),48.1515,
